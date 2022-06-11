@@ -1,7 +1,14 @@
 /**
  * Sample React Native App
  * https://github.com/facebook/react-native
- *
+ * 
+ * - Klick auf Item öffnet Link / Info
+ * - Herz-Button schreibt item in array fav / löschen / adden
+ * - Settings Array mit feeds / löschen / adden
+ * - Feeds combinieren
+ * - *VLLT* Sharen Daten persistieren
+ * - *VLLT* Sharen
+ * 
  * @format
  * @flow strict-local
  */
@@ -34,10 +41,12 @@
           tabBarIcon: ({ focused, color, size }) => {
             let iconName;
 
-            if (route.name === 'Home') {
-              iconName = 'ios-list';
+            if (route.name === 'Feed') {
+              iconName = 'help';
+            } else if (route.name === 'Favorites') {
+              iconName = 'help';
             } else if (route.name === 'Settings') {
-              iconName = 'ios-list';
+              iconName = 'help';
             }
             // You can return any component that you like here!
             return <Icon name={iconName} size={size} color={color} />;
@@ -46,14 +55,15 @@
           tabBarInactiveTintColor: 'gray',
         })}
       >
-        <Tab.Screen name="Home" component={HomeScreen} />
+        <Tab.Screen name="Feed" component={FeedScreen} />
+        <Tab.Screen name="Favorites" component={FavScreen} />
         <Tab.Screen name="Settings" component={SettingsScreen} />
       </Tab.Navigator>
     </NavigationContainer>
   );
 }
 
- function HomeScreen() {
+ function FeedScreen() {
 
   const feeds = ['https://www.thm.de/wi/studium/sie-studieren/aktuelles?format=feed&type=rss','https://www.thm.de/wi/studium/sie-studieren/aktuelles?format=feed&type=rss']
 
@@ -86,6 +96,14 @@
         style={ styles.feed }
       />
     </View>
+  );
+}
+
+function FavScreen() {
+  return (
+    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
+      <Text>Settings!</Text>
+  </View>
   );
 }
 
