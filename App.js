@@ -13,96 +13,60 @@ import * as rssParser from 'react-native-rss-parser';
 
 import {
   SafeAreaView,
-  ScrollView,
   StatusBar,
   StyleSheet,
   Text,
-  useColorScheme,
   View,
+  FlatList
 } from 'react-native';
 
-import {
-  Colors,
-  DebugInstructions,
-  Header,
-  LearnMoreLinks,
-  ReloadInstructions,
-} from 'react-native/Libraries/NewAppScreen';
-
-const Section = ({children, title}): Node => {
-  const isDarkMode = useColorScheme() === 'dark';
-  return (
-    <View style={styles.sectionContainer}>
-      <Text
-        style={[
-          styles.sectionTitle,
-          {
-            color: isDarkMode ? Colors.white : Colors.black,
-          },
-        ]}>
-        {title}
-      </Text>
-      <Text
-        style={[
-          styles.sectionDescription,
-          {
-            color: isDarkMode ? Colors.light : Colors.dark,
-          },
-        ]}>
-        {children}
-      </Text>
-    </View>
-  );
-};
-
 const App: () => Node = () => {
-  const isDarkMode = useColorScheme() === 'dark';
-
-  const backgroundStyle = {
-    backgroundColor: isDarkMode ? Colors.darker : Colors.lighter,
-  };
   const [rssFeedData, setRssFeedData] = useState('');
   fetch('http://www.nasa.gov/rss/dyn/breaking_news.rss')
           .then((response) => response.text())
           .then((responseData) => rssParser.parse(responseData))
           .then((rss) => {
               console.log(rss);
-              setRssFeedData(JSON.stringify(rss));
+              setRssFeedData(rss);
     });
 
+    const item = ( {item} ) => (
+      <Text style = {styles.item}>
+        {item.title}
+        {"\n"}
+        {item.description}
+        {"\n"}
+      </Text>
+    )    
+
   return (
-    <SafeAreaView style={backgroundStyle}>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      <ScrollView
-        contentInsetAdjustmentBehavior="automatic"
-        style={backgroundStyle}>
-        <View
-          style={{
-            backgroundColor: isDarkMode ? Colors.black : Colors.white,
-          }}>
-          <Text>{rssFeedData}</Text>
-        </View>
-      </ScrollView>
+    <SafeAreaView>
+      <StatusBar/>
+      <View style={styles.container}>
+        <FlatList
+          keyExtractor={(item => item.id)}
+          data = { rssFeedData.items }
+          renderItem={ item }
+          style={ styles.feed }
+        />
+      </View>
     </SafeAreaView>
   );
 };
 
 const styles = StyleSheet.create({
-  sectionContainer: {
-    marginTop: 32,
-    paddingHorizontal: 24,
+  container: {
+    backgroundColor: '#fff',
   },
-  sectionTitle: {
-    fontSize: 24,
-    fontWeight: '600',
+  item: {
+    margin: 5,
+    padding: 10,
+    paddingBottom: 1,
+    fontSize: 14,
+    backgroundColor: '#fff',
   },
-  sectionDescription: {
-    marginTop: 8,
-    fontSize: 18,
-    fontWeight: '400',
-  },
-  highlight: {
-    fontWeight: '700',
+  feed: {
+    color: 'black',
   },
 });
 
