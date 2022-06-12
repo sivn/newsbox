@@ -8,7 +8,7 @@
  * The content you see is work in progress!
  */
 
-import React, {useState} from 'react';
+import React, {useState, useEffect, Component} from 'react';
 import Icon from 'react-native-vector-icons/FontAwesome';
 import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
@@ -23,6 +23,82 @@ import {
   TouchableWithoutFeedback,
   Linking,
 } from 'react-native';
+
+class Feed extends Component {
+  constructor(props) {
+    super(props);
+    this.state = {
+      rss: {},
+    };
+  }
+
+  componentDidMount() {
+    fetch(
+      'https://www.thm.de/wi/studium/sie-studieren/aktuelles?format=feed&type=rss',
+    )
+      .then(response => response.text())
+      .then(responseData => rssParser.parse(responseData))
+      .then(rssFeed => {
+        console.log('RSS FEED!');
+        this.setState({rss: rssFeed});
+      });
+  }
+
+  render() {
+    const item = ({item}) => (
+      <TouchableWithoutFeedback
+        onPress={() => {
+          Linking.openURL(item.links[0].url);
+          console.log(item.links[0].url);
+        }}>
+        <View>
+          <Text style={styles.listItem}>
+            <Text style={styles.headline}>{item.title}</Text>
+            {'\n'}
+            {item.imageUrl}
+            {'\n'}
+            {item.description.replace(/<\/?[^>]+(>|$)/g, '')}
+            {'\n'}
+            {'\n'}
+            <Text style={styles.authors}>
+              {new Date(item.published).toLocaleDateString(
+                'en-DE',
+                dateOptions,
+              )}
+              {'  -  '}
+              {item.authors[0].name}
+              {'\n'}
+              {'\n'}
+            </Text>
+            <View style={styles.FavButtonContainer}>
+              <FAB
+                style={styles.FavButton}
+                icon="heart"
+                small
+                onPress={() => {
+                  favs.push(item);
+                  console.log(item.title, 'favs added!');
+                  console.log(favs.length);
+                }}
+              />
+            </View>
+          </Text>
+        </View>
+      </TouchableWithoutFeedback>
+    );
+    return (
+      <View style={styles.container}>
+        <FlatList
+          keyExtractor={item => item.id}
+          data={this.state.rss.items}
+          showsVerticalScrollIndicator={false}
+          style={styles.feed}
+          renderItem={item}
+        />
+      </View>
+    );
+  }
+}
 
 const Tab = createBottomTabNavigator();
 
@@ -87,68 +163,7 @@ export default function App() {
 }
 
 function FeedScreen() {
-  const [rssFeedData, setRssFeedData] = useState('');
-
-  fetch(
-    'https://www.thm.de/wi/studium/sie-studieren/aktuelles?format=feed&type=rss',
-  )
-    .then(response => response.text())
-    .then(responseData => rssParser.parse(responseData))
-    .then(rss => {
-      console.log('RSS FEED!');
-      setRssFeedData(rss);
-    });
-
-  const item = ({item}) => (
-    <TouchableWithoutFeedback
-      onPress={() => {
-        Linking.openURL(item.links[0].url);
-        console.log(item.links[0].url);
-      }}>
-      <View>
-        <Text style={styles.listItem}>
-          <Text style={styles.headline}>{item.title}</Text>
-          {'\n'}
-          {item.imageUrl}
-          {'\n'}
-          {item.description.replace(/<\/?[^>]+(>|$)/g, '')}
-          {'\n'}
-          {'\n'}
-          <Text style={styles.authors}>
-            {new Date(item.published).toLocaleDateString('en-DE', dateOptions)}
-            {'  -  '}
-            {item.authors[0].name}
-            {'\n'}
-            {'\n'}
-          </Text>
-          <View style={styles.FavButtonContainer}>
-            <FAB
-              style={styles.FavButton}
-              icon="heart"
-              small
-              onPress={() => {
-                favs.push(item);
-                console.log(item.title, 'favs added!');
-                console.log(favs.length);
-              }}
-            />
-          </View>
-        </Text>
-      </View>
-    </TouchableWithoutFeedback>
-  );
-
-  return (
-    <View style={styles.container}>
-      <FlatList
-        keyExtractor={item => item.id}
-        data={rssFeedData.items}
-        showsVerticalScrollIndicator={false}
-        style={styles.feed}
-        renderItem={item}
-      />
-    </View>
-  );
+  return <Feed></Feed>;
 }
 
 function FavScreen() {
