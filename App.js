@@ -21,10 +21,7 @@ import Icon from 'react-native-vector-icons/FontAwesome';
 import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import * as rssParser from 'react-native-rss-parser';
-import {FAB} from 'react-native-paper';
-import { Linking } from 'react-native';
-
-
+import {FAB, TextInput} from 'react-native-paper';
 
 import {
   StyleSheet,
@@ -33,6 +30,7 @@ import {
   FlatList,
   TouchableWithoutFeedback,
   Settings,
+  Linking,
 } from 'react-native';
 
 const Tab = createBottomTabNavigator();
@@ -57,8 +55,6 @@ feeds.push({
   title: 'Heise',
   url: 'https://www.heise.de/security/rss/news.rdf',
 });
-
-
 
 export default function App() {
   return (
@@ -107,46 +103,52 @@ function FeedScreen() {
   //    console.log(x);
   //});
 
- fetch(
-   'https://www.thm.de/wi/studium/sie-studieren/aktuelles?format=feed&type=rss',
- )
-   .then(response => response.text())
-   .then(responseData => rssParser.parse(responseData))
-   .then(rss => {
-     console.log('RENDERED FEED!');
-     setRssFeedData(rss);
-   });
-
+  fetch(
+    'https://www.thm.de/wi/studium/sie-studieren/aktuelles?format=feed&type=rss',
+  )
+    .then(response => response.text())
+    .then(responseData => rssParser.parse(responseData))
+    .then(rss => {
+      console.log('RSS FEED!');
+      setRssFeedData(rss);
+    });
 
   const item = ({item}) => (
     <TouchableWithoutFeedback
-    onPress={() => Linking.openURL('https://google.com')}>
-    <View>
-      <Text style={styles.listItem}>
-        <Text style={styles.headline}>{item.title}</Text>
-        {'\n'}
-        {item.imageUrl}
-        {'\n'}
-        {item.description.replace(/<\/?[^>]+(>|$)/g, '')}
-        {'\n'}
-        {'\n'}
-        <Text style={styles.authors}>
-          {new Date(item.published).toLocaleDateString('en-DE', dateOptions)}
-          {'  -  '}
-          {item.authors[0].name}
+      onPress={() => {
+        Linking.openURL(item.links[0].url);
+        console.log(item.links[0].url);
+      }}>
+      <View>
+        <Text style={styles.listItem}>
+          <Text style={styles.headline}>{item.title}</Text>
+          {'\n'}
+          {item.imageUrl}
+          {'\n'}
+          {item.description.replace(/<\/?[^>]+(>|$)/g, '')}
           {'\n'}
           {'\n'}
+          <Text style={styles.authors}>
+            {new Date(item.published).toLocaleDateString('en-DE', dateOptions)}
+            {'  -  '}
+            {item.authors[0].name}
+            {'\n'}
+            {'\n'}
+          </Text>
+          <View style={styles.FavButtonContainer}>
+            <FAB
+              style={styles.FavButton}
+              icon="heart"
+              small
+              onPress={() => {
+                favs.push(item);
+                console.log(item.title, 'favs added!');
+                console.log(favs.length);
+              }}
+            />
+          </View>
         </Text>
-        <View style={styles.FavButtonContainer}>
-          <FAB
-            style={styles.FavButton}
-            icon="heart"
-            small
-            onPress={() => {favs.push(item); console.log(item.title, 'favs added!'); console.log(favs.length)}}
-          />
-        </View>
-      </Text>
-    </View>
+      </View>
     </TouchableWithoutFeedback>
   );
 
@@ -168,29 +170,33 @@ function FavScreen() {
     <TouchableWithoutFeedback
       onPress={() => console.log('Selected Item :', item.title)}>
       <View>
-      <Text style={styles.listItem}>
-        <Text style={styles.headline}>{item.title}</Text>
-        {'\n'}
-        {item.imageUrl}
-        {'\n'}
-        {item.description.replace(/<\/?[^>]+(>|$)/g, '')}
-        {'\n'}
-        {'\n'}
-        <Text style={styles.authors}>
-          {new Date(item.published).toLocaleDateString('en-DE', dateOptions)}
-          {'  -  '}
-          {item.authors[0].name}
+        <Text style={styles.listItem}>
+          <Text style={styles.headline}>{item.title}</Text>
+          {'\n'}
+          {item.imageUrl}
+          {'\n'}
+          {item.description.replace(/<\/?[^>]+(>|$)/g, '')}
           {'\n'}
           {'\n'}
-        </Text>
-        <View style={styles.FavButtonContainer}>
-          <FAB
-            style={styles.DelButton}
-            icon="delete"
-            small
-            onPress={() => {favs.pop(item); console.log(item.title, 'favs removed!'); console.log(favs.length)}}
-          />
-        </View>
+          <Text style={styles.authors}>
+            {new Date(item.published).toLocaleDateString('en-DE', dateOptions)}
+            {'  -  '}
+            {item.authors[0].name}
+            {'\n'}
+            {'\n'}
+          </Text>
+          <View style={styles.FavButtonContainer}>
+            <FAB
+              style={styles.DelButton}
+              icon="delete"
+              small
+              onPress={() => {
+                favs.pop(item);
+                console.log(item.title, 'favs removed!');
+                console.log(favs.length);
+              }}
+            />
+          </View>
         </Text>
       </View>
     </TouchableWithoutFeedback>
@@ -210,24 +216,32 @@ function FavScreen() {
 }
 
 function SettingsScreen() {
+  const [text, setText] = React.useState('');
+
   const item = ({item}) => (
-      <View>
-        <Text style={styles.listItem}>
-          <Text style={styles.headline}>{item.title}</Text>
-          {'\n'}{'\n'}
-          {item.url}
-          {'\n'}
-          {'\n'}{'\n'}
+    <View>
+      <Text style={styles.listItem}>
+        <Text style={styles.headline}>{item.title}</Text>
+        {'\n'}
+        {'\n'}
+        {item.url}
+        {'\n'}
+        {'\n'}
+        {'\n'}
         <View style={styles.DelButtonContainer}>
           <FAB
             style={styles.DelButton}
             icon="delete"
             small
-            onPress={() => {feeds.pop(item); console.log(item.title, 'feed removed!'); console.log(feeds.length)}}
+            onPress={() => {
+              feeds.pop(item);
+              console.log(item.title, 'feed removed!');
+              console.log(feeds.length);
+            }}
           />
         </View>
-        </Text>
-      </View>
+      </Text>
+    </View>
   );
 
   return (
@@ -239,14 +253,19 @@ function SettingsScreen() {
         style={styles.feed}
         renderItem={item}
       />
-         <View >
-          <FAB
-            style={styles.AddlButton}
-            icon="plus"
-            small
-            onPress={() => {feed.pop(item); console.log(item.title, 'feed added!'); console.log(favs.length)}}
-          />
-        </View>
+      <View>
+        <FAB
+          style={styles.AddlButton}
+          icon="plus"
+          small
+          onPress={() => {
+            text => setText(text);
+            feed.pop(item);
+            console.log(item.title, 'feed added!');
+            console.log(favs.length);
+          }}
+        />
+      </View>
     </View>
   );
 }

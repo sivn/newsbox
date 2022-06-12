@@ -1,5 +1,11 @@
 import React, {Component, useState} from 'react';
-import {Text, View, StyleSheet, FlatList} from 'react-native';
+import {
+  Text,
+  View,
+  StyleSheet,
+  FlatList,
+  TouchableWithoutFeedback,
+} from 'react-native';
 import * as rssParser from 'react-native-rss-parser';
 
 export default class Feed extends Component {
@@ -24,37 +30,49 @@ export default class Feed extends Component {
 
   render() {
     const item = ({item}) => (
-      <View>
-        <Text style={styles.listItem}>
-          <Text style={styles.headline}>{item.title}</Text>
-          {'\n'}
-          {item.imageUrl}
-          {'\n'}
-          {item.description.replace(/<\/?[^>]+(>|$)/g, '')}
-          {'\n'}
-          {'\n'}
-          {'\n'}
-          <Text style={styles.authors}>
-            {new Date(item.published).toLocaleDateString('en-DE', dateOptions)}
-            {'  -  '}
-            {item.authors[0].name}
+      <TouchableWithoutFeedback
+        onPress={() => Linking.openURL('https://google.com')}>
+        <View>
+          <Text style={styles.listItem}>
+            <Text style={styles.headline}>{item.title}</Text>
+            {'\n'}
+            {item.imageUrl}
+            {'\n'}
+            {item.description.replace(/<\/?[^>]+(>|$)/g, '')}
+            {'\n'}
+            {'\n'}
+            <Text style={styles.authors}>
+              {new Date(item.published).toLocaleDateString(
+                'en-DE',
+                dateOptions,
+              )}
+              {'  -  '}
+              {item.authors[0].name}
+              {'\n'}
+              {'\n'}
+            </Text>
+            <View style={styles.FavButtonContainer}>
+              <FAB
+                style={styles.FavButton}
+                icon="heart"
+                small
+                onPress={() => {
+                  favs.push(item);
+                  console.log(item.title, 'favs added!');
+                  console.log(favs.length);
+                }}
+              />
+            </View>
           </Text>
-          <View style={styles.FavButton}>
-            <Button
-              title="<3"
-              onPress={() => Alert.alert('Cannot press this one')}
-              style={styles.FavButton}
-            />
-          </View>
-        </Text>
-      </View>
+        </View>
+      </TouchableWithoutFeedback>
     );
 
     return (
       <View style={styles.container}>
         <FlatList
           keyExtractor={item => item.id}
-          data={rssFeedData.items}
+          data={this.state.content}
           showsVerticalScrollIndicator={false}
           style={styles.feed}
           renderItem={item}
@@ -67,8 +85,6 @@ export default class Feed extends Component {
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    padding: 5,
-    paddingTop: 5,
   },
   headline: {
     fontWeight: 'bold',
@@ -84,8 +100,10 @@ const styles = StyleSheet.create({
     borderColor: 'white',
     padding: 25,
     borderRadius: 15,
-    marginBottom: 10,
-    margin: 5,
+    marginBottom: 5,
+    marginTop: 15,
+    marginLeft: 15,
+    marginRight: 15,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -120,8 +138,32 @@ const styles = StyleSheet.create({
     padding: 14,
   },
   FavButton: {
-    height: 10,
-    width: 10,
+    backgroundColor: '#80ba24',
+    left: 295,
+  },
+  DelButton: {
+    backgroundColor: '#ff365e',
+    left: 295,
+  },
+  AddlButton: {
+    backgroundColor: '#03b1fc',
+    marginLeft: 100,
+    marginRight: 100,
+    margin: 50,
+  },
+  FavButtonContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'flex-end',
+    margin: 5,
+  },
+  DelButtonContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'flex-end',
+    margin: 5,
   },
 });
 
