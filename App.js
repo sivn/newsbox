@@ -80,9 +80,21 @@ export default function App() {
           tabBarActiveTintColor: '#80ba24',
           tabBarInactiveTintColor: 'gray',
         })}>
-        <Tab.Screen name="Feed" component={FeedScreen} />
-        <Tab.Screen name="Favorites" component={FavScreen} />
-        <Tab.Screen name="Settings" component={SettingsScreen} />
+        <Tab.Screen
+          name="Feed"
+          component={FeedScreen}
+          options={{headerShown: false}}
+        />
+        <Tab.Screen
+          name="Favorites"
+          component={FavScreen}
+          options={{headerShown: false}}
+        />
+        <Tab.Screen
+          name="Settings"
+          component={SettingsScreen}
+          options={{headerShown: false}}
+        />
       </Tab.Navigator>
     </NavigationContainer>
   );
