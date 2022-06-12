@@ -22,7 +22,9 @@ import {NavigationContainer} from '@react-navigation/native';
 import {createBottomTabNavigator} from '@react-navigation/bottom-tabs';
 import * as rssParser from 'react-native-rss-parser';
 import {FAB} from 'react-native-paper';
-import Feed from './Feed';
+import { Linking } from 'react-native';
+
+
 
 import {
   StyleSheet,
@@ -46,18 +48,17 @@ let dateOptions = {
 };
 
 //STATIC
-favs.push({
-  title: 'WhackShit1',
+
+feeds.push({
+  title: 'THM',
   url: 'https://www.thm.de/wi/studium/sie-studieren/aktuelles?format=feed&type=rss',
 });
 feeds.push({
-  title: 'WhackShit1',
-  url: 'https://www.thm.de/wi/studium/sie-studieren/aktuelles?format=feed&type=rss',
-});
-feeds.push({
-  title: 'WhackShit2',
+  title: 'Heise',
   url: 'https://www.heise.de/security/rss/news.rdf',
 });
+
+
 
 export default function App() {
   return (
@@ -106,17 +107,20 @@ function FeedScreen() {
   //    console.log(x);
   //});
 
-  fetch(
-    'https://www.thm.de/wi/studium/sie-studieren/aktuelles?format=feed&type=rss',
-  )
-    .then(response => response.text())
-    .then(responseData => rssParser.parse(responseData))
-    .then(rss => {
-      console.log('RENDERED FEED!');
-      setRssFeedData(rss);
-    });
+ fetch(
+   'https://www.thm.de/wi/studium/sie-studieren/aktuelles?format=feed&type=rss',
+ )
+   .then(response => response.text())
+   .then(responseData => rssParser.parse(responseData))
+   .then(rss => {
+     console.log('RENDERED FEED!');
+     setRssFeedData(rss);
+   });
+
 
   const item = ({item}) => (
+    <TouchableWithoutFeedback
+    onPress={() => Linking.openURL('https://google.com')}>
     <View>
       <Text style={styles.listItem}>
         <Text style={styles.headline}>{item.title}</Text>
@@ -138,11 +142,12 @@ function FeedScreen() {
             style={styles.FavButton}
             icon="heart"
             small
-            onPress={() => console.log('Passt so...')}
+            onPress={() => {favs.push(item); console.log(item.title, 'favs added!'); console.log(favs.length)}}
           />
         </View>
       </Text>
     </View>
+    </TouchableWithoutFeedback>
   );
 
   return (
@@ -163,13 +168,29 @@ function FavScreen() {
     <TouchableWithoutFeedback
       onPress={() => console.log('Selected Item :', item.title)}>
       <View>
-        <Text style={styles.listItem}>
-          <Text style={styles.headline}>{item.title}</Text>
+      <Text style={styles.listItem}>
+        <Text style={styles.headline}>{item.title}</Text>
+        {'\n'}
+        {item.imageUrl}
+        {'\n'}
+        {item.description.replace(/<\/?[^>]+(>|$)/g, '')}
+        {'\n'}
+        {'\n'}
+        <Text style={styles.authors}>
+          {new Date(item.published).toLocaleDateString('en-DE', dateOptions)}
+          {'  -  '}
+          {item.authors[0].name}
           {'\n'}
-          {item.imageUrl}
           {'\n'}
-          {item.published}
-          {'\n'}
+        </Text>
+        <View style={styles.FavButtonContainer}>
+          <FAB
+            style={styles.DelButton}
+            icon="delete"
+            small
+            onPress={() => {favs.pop(item); console.log(item.title, 'favs removed!'); console.log(favs.length)}}
+          />
+        </View>
         </Text>
       </View>
     </TouchableWithoutFeedback>
@@ -178,7 +199,7 @@ function FavScreen() {
   return (
     <View style={styles.container}>
       <FlatList
-        keyExtractor={item => item.published}
+        keyExtractor={item => item.title}
         data={favs}
         showsVerticalScrollIndicator={false}
         style={styles.feed}
@@ -190,30 +211,42 @@ function FavScreen() {
 
 function SettingsScreen() {
   const item = ({item}) => (
-    <TouchableWithoutFeedback
-      onPress={() => console.log('Selected Item :', item.title)}>
       <View>
         <Text style={styles.listItem}>
           <Text style={styles.headline}>{item.title}</Text>
+          {'\n'}{'\n'}
+          {item.url}
           {'\n'}
-          {item.imageUrl}
-          {'\n'}
-          {item.published}
-          {'\n'}
+          {'\n'}{'\n'}
+        <View style={styles.DelButtonContainer}>
+          <FAB
+            style={styles.DelButton}
+            icon="delete"
+            small
+            onPress={() => {feeds.pop(item); console.log(item.title, 'feed removed!'); console.log(feeds.length)}}
+          />
+        </View>
         </Text>
       </View>
-    </TouchableWithoutFeedback>
   );
 
   return (
     <View style={styles.container}>
       <FlatList
-        keyExtractor={item => item.published}
+        keyExtractor={item => item.url}
         data={feeds}
         showsVerticalScrollIndicator={false}
         style={styles.feed}
         renderItem={item}
       />
+         <View >
+          <FAB
+            style={styles.AddlButton}
+            icon="plus"
+            small
+            onPress={() => {feed.pop(item); console.log(item.title, 'feed added!'); console.log(favs.length)}}
+          />
+        </View>
     </View>
   );
 }
@@ -221,8 +254,6 @@ function SettingsScreen() {
 const styles = StyleSheet.create({
   container: {
     width: '100%',
-    padding: 5,
-    paddingTop: 5,
   },
   headline: {
     fontWeight: 'bold',
@@ -238,8 +269,10 @@ const styles = StyleSheet.create({
     borderColor: 'white',
     padding: 25,
     borderRadius: 15,
-    marginBottom: 10,
-    margin: 5,
+    marginBottom: 5,
+    marginTop: 15,
+    marginLeft: 15,
+    marginRight: 15,
     shadowColor: '#000',
     shadowOffset: {
       width: 0,
@@ -275,9 +308,26 @@ const styles = StyleSheet.create({
   },
   FavButton: {
     backgroundColor: '#80ba24',
-    left: 300,
+    left: 295,
+  },
+  DelButton: {
+    backgroundColor: '#ff365e',
+    left: 295,
+  },
+  AddlButton: {
+    backgroundColor: '#03b1fc',
+    marginLeft: 100,
+    marginRight: 100,
+    margin: 50,
   },
   FavButtonContainer: {
+    flex: 1,
+    flexDirection: 'row',
+    alignItems: 'flex-end',
+    justifyContent: 'flex-end',
+    margin: 5,
+  },
+  DelButtonContainer: {
     flex: 1,
     flexDirection: 'row',
     alignItems: 'flex-end',
