@@ -117,7 +117,7 @@ feeds.push({
           {"\n"}
           {new Date(item.published).toLocaleDateString('en-DE', dateOptions)}{"  -  "}{item.authors[0].name}
         </Text>
-        </
+        <Text></Text>
       </View>
     </TouchableWithoutFeedback>
   )
