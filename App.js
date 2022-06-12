@@ -9,44 +9,67 @@
  * - *VLLT* Sharen Daten persistieren
  * - *VLLT* Sharen
  * 
+ * 
+ * 
+ * 
+ * 
  * @format
  * @flow strict-local
  */
- import React, { useState } from 'react';
+ import React, { useState, useRef } from 'react';
  import * as rssParser from 'react-native-rss-parser';
  import Icon from 'react-native-vector-icons/FontAwesome';
  import { NavigationContainer } from '@react-navigation/native';
  import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+ import { TapGestureHandler } from 'react-native-gesture-handler';
+
 
  import {
-   SafeAreaView,
-   StatusBar,
    StyleSheet,
-   Pressable,
    Text,
    View,
-   FlatList
+   FlatList,
+   TouchableWithoutFeedback
  } from 'react-native';
  
- var iconHeight = 26;
- var iconWidth = 26;
-
  const Tab = createBottomTabNavigator();
+
+let favs = new Array();
+let feeds = new Array();
+
+let dateOptions = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+
+//STATIC
+favs.push({
+  title: 'hack shit title',
+  imageUrl: 'whack shit imageurl',
+  published: Date.UTC,
+});
+
+feeds.push({
+  title:'WhackShit1',
+  url:'https://www.thm.de/wi/studium/sie-studieren/aktuelles?format=feed&type=rss',
+});
+feeds.push({
+  title:'WhackShit2',
+  url:'https://www.heise.de/security/rss/news.rdf',
+});
+
 
  export default function App() {
   return (
     <NavigationContainer>
       <Tab.Navigator
         screenOptions={({ route }) => ({
-          tabBarIcon: ({ focused, color, size }) => {
+          tabBarIcon: ({ color, size }) => {
             let iconName;
 
             if (route.name === 'Feed') {
-              iconName = 'help';
+              iconName = 'rss-square';
             } else if (route.name === 'Favorites') {
-              iconName = 'help';
+              iconName = 'heart';
             } else if (route.name === 'Settings') {
-              iconName = 'help';
+              iconName = 'cog';
             }
             // You can return any component that you like here!
             return <Icon name={iconName} size={size} color={color} />;
@@ -64,27 +87,39 @@
 }
 
  function FeedScreen() {
-
-  const feeds = ['https://www.thm.de/wi/studium/sie-studieren/aktuelles?format=feed&type=rss','https://www.thm.de/wi/studium/sie-studieren/aktuelles?format=feed&type=rss']
-
+  
   const [rssFeedData, setRssFeedData] = useState(''); 
-   fetch('https://www.thm.de/wi/studium/sie-studieren/aktuelles?format=feed&type=rss')
+  //feeds.forEach(function(x) {
+  //    console.log(x);
+  //});
+  
+
+    fetch('https://www.thm.de/wi/studium/sie-studieren/aktuelles?format=feed&type=rss')
            .then((response) => response.text())
            .then((responseData) => rssParser.parse(responseData))
            .then((rss) => {
-               console.log(rss);
+               console.log('RENDERED FEED!');
                setRssFeedData(rss);
-     });
+  });
+
+  const doubleTapRef = useRef()
 
   const item = ( {item} ) => (
-    <Text style = {styles.listItem}>
-      {item.title}
-      {"\n"}
-      {item.imageUrl}
-      {"\n"}
-      {item.published}
-      {"\n"}
-    </Text>
+    <TouchableWithoutFeedback onPress = {() => console.log('Selected Item :',item.title)}>
+      <View>
+        <Text style = {styles.listItem}>
+        <Text style = {styles.headline}>{item.title}</Text>
+          {"\n"}
+          {item.imageUrl}
+          {"\n"}
+          {item.description.replace(/<\/?[^>]+(>|$)/g, "")}
+          {"\n"}
+          {"\n"}
+          {new Date(item.published).toLocaleDateString('en-DE', dateOptions)}{"  -  "}{item.authors[0].name}
+        </Text>
+        </
+      </View>
+    </TouchableWithoutFeedback>
   )
 
   return (
@@ -92,26 +127,68 @@
       <FlatList
         keyExtractor={(item => item.id)}
         data = { rssFeedData.items }
-        renderItem={ item }
-        style={ styles.feed }
+        showsVerticalScrollIndicator = {false}
+        style = { styles.feed } 
+        renderItem = {item}
+      />
+    </View>
+  );
+}
+
+function SettingsScreen() {
+
+  const item = ( {item} ) => (
+    <TouchableWithoutFeedback onPress = {() => console.log('Selected Item :',item.title)}>
+      <View>
+        <Text style = {styles.listItem}>
+        <Text style = {styles.headline}>{item.title}</Text>
+          {"\n"}
+          {item.url}
+        </Text>
+      </View>
+    </TouchableWithoutFeedback>
+  )
+  
+  return (
+    <View style={styles.container}>
+      <FlatList
+        keyExtractor={(item => item.url)}
+        data = { feeds }
+        showsVerticalScrollIndicator = {false}
+        style = { styles.feed } 
+        renderItem = { item }
       />
     </View>
   );
 }
 
 function FavScreen() {
-  return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text>Settings!</Text>
-  </View>
-  );
-}
 
-function SettingsScreen() {
+  const item = ( {item} ) => (
+    <TouchableWithoutFeedback onPress = {() => console.log('Selected Item :',item.title)}>
+      <View>
+        <Text style = {styles.listItem}>
+          <Text style = {styles.headline}>{item.title}</Text>
+          {"\n"}
+          {item.imageUrl}
+          {"\n"}
+          {item.published}
+          {"\n"}
+        </Text>
+      </View>
+    </TouchableWithoutFeedback>
+  )
+
   return (
-    <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center' }}>
-      <Text>Settings!</Text>
-  </View>
+    <View style={styles.container}>
+      <FlatList
+        keyExtractor={(item => item.published)}
+        data = { favs }
+        showsVerticalScrollIndicator = {false}
+        style = { styles.feed } 
+        renderItem = {item}
+      />
+    </View>
   );
 }
  
@@ -121,6 +198,10 @@ function SettingsScreen() {
      padding: 5,
      paddingTop: 5,
    },
+   headline: {
+    fontWeight: 'bold',
+    fontSize: 20,
+   },
    listItem: {
     backgroundColor: "white",
     borderWidth: 1,
@@ -128,6 +209,7 @@ function SettingsScreen() {
     padding: 25,
     borderRadius: 15,
     marginBottom: 10,
+    margin: 5,
     shadowColor: "#000",
     shadowOffset: {
       width: 0,
@@ -160,5 +242,53 @@ function SettingsScreen() {
    },
    Iconbehave: {
      padding: 14,
+   },
+   FavButton: {
+    height: 10,
+    width: 10,
    }
  });
+
+ /*
+<TouchableWithoutFeedback onPress = {() => console.log('Selected Item :',item.title)}>
+  <View>
+    <Text style = {styles.listItem}>
+      {item.title}
+      {"\n"}
+      {item.imageUrl}
+      {"\n"}
+      {item.published}
+      {"\n"}
+    </Text>
+  </View>
+</TouchableWithoutFeedback>
+
+const item = ( {item} ) => (
+      <View>
+        <TapGestureHandler
+        waitFor={doubleTapRef}
+          onActivated={() => {
+            console.log('SINGLE TAP')
+          }}
+        >
+          <TapGestureHandler
+            ref={doubleTapRef}
+            numberOfTaps={2}
+            onActivated={() => {
+              console.log('DOUBLE TAP')
+            }}
+          >
+            <Text style = {styles.listItem}>
+              {item.title}
+              {"\n"}
+              {item.imageUrl}
+              {"\n"}
+              {item.published}
+              {"\n"}
+            </Text>
+          </TapGestureHandler>
+        </TapGestureHandler>
+      </View>
+    )
+
+ */
